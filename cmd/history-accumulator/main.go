@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	dataDir = flag.String("data_dir", "/tmp/dump1090-mutability", "")
+	dataDir = flag.String("data_dir", "/run/dump1090-mutability", "")
 	outDir  = flag.String("out_dir", "/tmp/history-accumulator", "")
 )
 
@@ -40,7 +40,7 @@ func run() error {
 	}
 
 	// Read the current file into memory as a map for quick duplicate checks.
-	b, err := os.ReadFile(path.Join(*dataDir, "all_aircraft.json"))
+	b, err := os.ReadFile(path.Join(*outDir, "all_aircraft.json"))
 	if err != nil {
 		return fmt.Errorf("reading all aircraft file: %v", err)
 	}
@@ -80,7 +80,7 @@ func run() error {
 		}
 	}
 
-	// Write back the updated list of aircraft.
+	// Write back the updated list of aircraft, sorted to maintain determinstic output.
 	current = maps.Keys(allAircraft)
 	slices.SortStableFunc(current, func(a, b aircraft) int {
 		if a.Code == b.Code {
