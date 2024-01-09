@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"slices"
 	"strings"
 	"time"
 
@@ -16,7 +17,8 @@ import (
 )
 
 var (
-	dataDir = flag.String("data_dir", "/run/dump1090-mutability", "")
+	dataDir = flag.String("data_dir", "/tmp/dump1090-mutability", "")
+	outDir  = flag.String("out_dir", "/tmp/history-accumulator", "")
 )
 
 type historicalRadarEntry struct {
@@ -34,11 +36,11 @@ type aircraft struct {
 func run() error {
 	entries, err := os.ReadDir(*dataDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("read data dir: %v", err)
 	}
 
 	// Read the current file into memory as a map for quick duplicate checks.
-	b, err := os.ReadFile("/run/historical-radar-uploader/all_aircraft.json")
+	b, err := os.ReadFile(path.Join(*dataDir, "all_aircraft.json"))
 	if err != nil {
 		return fmt.Errorf("reading all aircraft file: %v", err)
 	}
@@ -79,11 +81,27 @@ func run() error {
 	}
 
 	// Write back the updated list of aircraft.
-	b, err = json.Marshal(maps.Keys(allAircraft))
+	current = maps.Keys(allAircraft)
+	slices.SortStableFunc(current, func(a, b aircraft) int {
+		if a.Code == b.Code {
+			if a.When == b.When {
+				return 0
+			}
+			if a.When < b.When {
+				return -1
+			}
+			return 1
+		}
+		if a.Code < b.Code {
+			return -1
+		}
+		return 1
+	})
+	b, err = json.MarshalIndent(current, "  ", "  ")
 	if err != nil {
 		return fmt.Errorf("marshaling all aircraft to json: %v", err)
 	}
-	if err := os.WriteFile("/run/historical-radar-uploader/all_aircraft.json", b, 0777); err != nil {
+	if err := os.WriteFile(path.Join(*outDir, "all_aircraft.json"), b, 0777); err != nil {
 		return fmt.Errorf("writing all aircraft file: %v", err)
 	}
 	return nil
