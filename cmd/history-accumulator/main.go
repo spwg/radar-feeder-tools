@@ -1,4 +1,4 @@
-// Binary update writes scans the historical json files in the given --data_dir
+// Binary history-accumulator writes scans the historical json files in the given --data_dir
 // for updates to a file accumulating all past runs.
 package main
 

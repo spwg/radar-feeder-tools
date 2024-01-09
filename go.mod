@@ -1,4 +1,4 @@
-module github.com/spwg/historical-radar-uploader
+module github.com/spwg/radar-feeder-tools
 
 go 1.21.5
 
