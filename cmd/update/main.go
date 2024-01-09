@@ -78,6 +78,7 @@ func run() error {
 		}
 	}
 
+	// Write back the updated list of aircraft.
 	b, err = json.Marshal(maps.Keys(allAircraft))
 	if err != nil {
 		return fmt.Errorf("marshaling all aircraft to json: %v", err)
