@@ -1,0 +1,7 @@
+{ "now" : 1705026154.0,
+  "messages" : 17632,
+  "aircraft" : [
+    {"hex":"a6bfa6","flight":"DAL798  ","altitude":15950,"category":"A3","mlat":[],"tisb":[],"messages":8,"seen":4.8,"rssi":-13.5},
+    {"hex":"acbf73","flight":"N920PD  ","altitude":875,"vert_rate":-192,"track":312,"speed":75,"category":"A7","mlat":[],"tisb":[],"messages":26,"seen":24.7,"rssi":-12.9}
+  ]
+}

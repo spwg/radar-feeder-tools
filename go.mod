@@ -2,7 +2,10 @@ module github.com/spwg/radar-feeder-tools
 
 go 1.21.5
 
-require cloud.google.com/go/storage v1.36.0
+require (
+	cloud.google.com/go/storage v1.36.0
+	github.com/google/go-cmp v0.6.0
+)
 
 require (
 	cloud.google.com/go v0.110.8 // indirect
