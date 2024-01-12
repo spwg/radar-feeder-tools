@@ -3,17 +3,10 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
-	"os"
-	"path"
-	"slices"
-	"strings"
-	"time"
 
-	"golang.org/x/exp/maps"
+	"github.com/spwg/radar-feeder-tools/internal/history"
 )
 
 var (
@@ -21,10 +14,9 @@ var (
 	outDir  = flag.String("out_dir", "/tmp/history-accumulator", "")
 )
 
-
 func main() {
 	flag.Parse()
-	if err := run(); err != nil {
+	if err := history.Run(*dataDir, *outDir); err != nil {
 		log.Fatal(err)
 	}
 }
