@@ -103,6 +103,14 @@ func MergeHistoryFiles(dataDir, outDir string) error {
 	return nil
 }
 
+// UploadToPostgres reads all the history_*.json files from the given dataDir
+// (absolute path of a directory) and uploads them to the Fly Postgres instance.
+//
+// TODO: implement. Currently just runs an error.
+func UploadToFlyPostgresInstance(dataDir string) error {
+	return fmt.Errorf("unimplemented")
+}
+
 func or[T cmp.Ordered](args ...T) T {
 	var zero T
 	for _, e := range args {
