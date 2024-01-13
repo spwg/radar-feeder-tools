@@ -34,7 +34,7 @@ func TestHistoryAccumulator(t *testing.T) {
 	if err := os.WriteFile(path.Join(dataDir, "history_47.json"), history47, 0777); err != nil {
 		t.Error(err)
 	}
-	if err := history.Run(dataDir, outDir); err != nil {
+	if err := history.MergeHistoryFiles(dataDir, outDir); err != nil {
 		t.Errorf("Run(%q, %q): %v", dataDir, outDir, err)
 	}
 	b, err := os.ReadFile(path.Join(outDir, "all_aircraft.json"))

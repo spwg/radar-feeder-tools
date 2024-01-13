@@ -16,7 +16,7 @@ var (
 
 func main() {
 	flag.Parse()
-	if err := history.Run(*dataDir, *outDir); err != nil {
+	if err := history.MergeHistoryFiles(*dataDir, *outDir); err != nil {
 		log.Fatal(err)
 	}
 }

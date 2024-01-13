@@ -26,8 +26,10 @@ type aircraft struct {
 	When int64  `json:"when"` // unix seconds
 }
 
-// Run is the entrypoint to historical file processing for files produced by fr24feeder.
-func Run(dataDir, outDir string) error {
+// MergeHistoryFiles combines the history_*.json files from dataDir (absolute
+// path of a directory) and writes them into all_aircraft.json in outDir
+// (absolute path of a directory).
+func MergeHistoryFiles(dataDir, outDir string) error {
 	// Read the current file into memory as a map for quick duplicate checks.
 	b, err := os.ReadFile(path.Join(outDir, "all_aircraft.json"))
 	if err != nil {
