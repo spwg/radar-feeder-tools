@@ -1,4 +1,4 @@
-// Binary history-accumulator interacts with the historical files written
+// Binary dump1090-history-manager interacts with the historical files written
 // from the dump1090-mutability program that the FR24 radar uploader runs.
 package main
 
@@ -11,7 +11,7 @@ import (
 
 var (
 	dataDir          = flag.String("data_dir", "/run/dump1090-mutability", "")
-	outDir           = flag.String("out_dir", "/tmp/history-accumulator", "")
+	outDir           = flag.String("out_dir", "/tmp/dump1090-history-manager", "")
 	uploadToPostgres = flag.Bool("postgres_upload", false, "Whether to upload to postgres.")
 )
 
