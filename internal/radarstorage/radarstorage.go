@@ -38,9 +38,13 @@ func UploadToFlyPostgresInstance(ctx context.Context, db *sql.DB, flights map[hi
 	// This is desirable because it means rerunning the inserts won't cause an
 	// error, making this code simpler.
 	q += " on conflict do nothing;"
-	n, err := db.ExecContext(ctx, q, rows...)
+	result, err := db.ExecContext(ctx, q, rows...)
 	if err != nil {
 		return fmt.Errorf("UploadToFlyPostgresInstance: %v", err)
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return err
 	}
 	glog.Infof("Inserted %v rows.", n)
 	return nil

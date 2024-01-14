@@ -31,6 +31,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
+		glog.Infof("Flights %+v", flights)
 		glog.Infof("Connecting to Postgres.")
 		db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
 		if err != nil {
