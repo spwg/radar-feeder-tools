@@ -3,10 +3,15 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"flag"
 	"log"
+	"os"
 
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/spwg/radar-feeder-tools/internal/history"
+	"github.com/spwg/radar-feeder-tools/internal/radarstorage"
 )
 
 var (
@@ -15,15 +20,31 @@ var (
 	uploadToPostgres = flag.Bool("postgres_upload", false, "Whether to upload to postgres.")
 )
 
+func run() error {
+	ctx := context.Background()
+	switch {
+	case *uploadToPostgres:
+		flights, err := history.ReadHistoricalFiles(*dataDir)
+		if err != nil {
+			return err
+		}
+		db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+		if err := radarstorage.UploadToFlyPostgresInstance(ctx, db, flights); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return history.MergeHistoryFiles(*dataDir, *outDir)
+	}
+}
+
 func main() {
 	flag.Parse()
-	if *uploadToPostgres {
-		if err := history.UploadToFlyPostgresInstance(*dataDir); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-	if err := history.MergeHistoryFiles(*dataDir, *outDir); err != nil {
+	if err := run(); err != nil {
 		log.Fatal(err)
 	}
 }

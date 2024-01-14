@@ -21,7 +21,8 @@ type historicalRadarEntry struct {
 	} `json:"aircraft"`
 }
 
-type aircraft struct {
+// FlightObservation is an observation of a flight at a certain point in time.
+type FlightObservation struct {
 	Code string `json:"code"` // flight number or N-number
 	When int64  `json:"when"` // unix seconds
 }
@@ -35,49 +36,27 @@ func MergeHistoryFiles(dataDir, outDir string) error {
 	if err != nil {
 		return fmt.Errorf("reading all aircraft file: %v", err)
 	}
-	var current []aircraft
+	var current []FlightObservation
 	if err := json.Unmarshal(b, &current); err != nil {
 		return fmt.Errorf("unmarshaling all aircraft json: %v", err)
 	}
-	allAircraft := map[aircraft]struct{}{}
+	allAircraft := map[FlightObservation]struct{}{}
 	for _, a := range current {
 		allAircraft[a] = struct{}{}
 	}
 
-	// Scan the historical files and add them to the allAircraft hash table.
-	entries, err := os.ReadDir(dataDir)
+	// Merge the new entries from the history files into the current ones.
+	fromHistory, err := ReadHistoricalFiles(dataDir)
 	if err != nil {
-		return fmt.Errorf("read data dir: %v", err)
+		return err
 	}
-	for _, e := range entries {
-		if !strings.HasPrefix(e.Name(), "history") {
-			continue
-		}
-		b, err := os.ReadFile(path.Join(dataDir, e.Name()))
-		if err != nil {
-			return fmt.Errorf("reading historical files: %v", err)
-		}
-		entry := &historicalRadarEntry{}
-		if err := json.Unmarshal(b, entry); err != nil {
-			return fmt.Errorf("unmarshaling historical files: %v", err)
-		}
-		// Skip entries that don't have a timestamp.
-		if entry.Now == 0. {
-			continue
-		}
-		when := time.Unix(int64(math.Floor(entry.Now)), 0)
-		for _, a := range entry.Aircraft {
-			// Skip entries that have no flight number.
-			if len(a.Flight) == 0 {
-				continue
-			}
-			allAircraft[aircraft{a.Flight, when.Unix()}] = struct{}{}
-		}
+	for k := range fromHistory {
+		allAircraft[k] = struct{}{}
 	}
 
 	// Find the most recent entry, and use that to only keep 24h of entries.
 	keys := maps.Keys(allAircraft)
-	latestUnixSecond := slices.MaxFunc(keys, func(a, b aircraft) int {
+	latestUnixSecond := slices.MaxFunc(keys, func(a, b FlightObservation) int {
 		return cmp.Compare(a.When, b.When)
 	}).When
 
@@ -90,7 +69,7 @@ func MergeHistoryFiles(dataDir, outDir string) error {
 
 	// Write back the updated list of aircraft, sorted to make it easier to read output.
 	current = maps.Keys(allAircraft)
-	slices.SortStableFunc(current, func(a, b aircraft) int {
+	slices.SortStableFunc(current, func(a, b FlightObservation) int {
 		return or(cmp.Compare(a.When, b.When), cmp.Compare(a.Code, b.Code))
 	})
 	b, err = json.MarshalIndent(current, "  ", "  ")
@@ -103,12 +82,42 @@ func MergeHistoryFiles(dataDir, outDir string) error {
 	return nil
 }
 
-// UploadToPostgres reads all the history_*.json files from the given dataDir
-// (absolute path of a directory) and uploads them to the Fly Postgres instance.
-//
-// TODO: implement. Currently just runs an error.
-func UploadToFlyPostgresInstance(dataDir string) error {
-	return fmt.Errorf("unimplemented")
+// ReadHistoricalFiles scans all the history_*.json files in dataDir (absolute
+// path of a directory) and merges the flight entries found in them. The
+// returned slice will not have duplicates with respect to flight number &
+// observation time, though it may have multiple entries for the same flight.
+func ReadHistoricalFiles(dataDir string) (map[FlightObservation]struct{}, error) {
+	entries, err := os.ReadDir(dataDir)
+	if err != nil {
+		return nil, fmt.Errorf("read data dir: %v", err)
+	}
+	allAircraft := make(map[FlightObservation]struct{})
+	for _, e := range entries {
+		if !strings.HasPrefix(e.Name(), "history") {
+			continue
+		}
+		b, err := os.ReadFile(path.Join(dataDir, e.Name()))
+		if err != nil {
+			return nil, fmt.Errorf("reading historical files: %v", err)
+		}
+		entry := &historicalRadarEntry{}
+		if err := json.Unmarshal(b, entry); err != nil {
+			return nil, fmt.Errorf("unmarshaling historical files: %v", err)
+		}
+		// Skip entries that don't have a timestamp.
+		if entry.Now == 0. {
+			continue
+		}
+		when := time.Unix(int64(math.Floor(entry.Now)), 0)
+		for _, a := range entry.Aircraft {
+			// Skip entries that have no flight number.
+			if len(a.Flight) == 0 {
+				continue
+			}
+			allAircraft[FlightObservation{a.Flight, when.Unix()}] = struct{}{}
+		}
+	}
+	return allAircraft, nil
 }
 
 func or[T cmp.Ordered](args ...T) T {
