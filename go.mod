@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/golang/glog v1.2.0
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
