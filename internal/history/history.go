@@ -3,6 +3,7 @@ package history
 import (
 	"cmp"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -32,9 +33,17 @@ type FlightObservation struct {
 // (absolute path of a directory).
 func MergeHistoryFiles(dataDir, outDir string) error {
 	// Read the current file into memory as a map for quick duplicate checks.
-	b, err := os.ReadFile(path.Join(outDir, "all_aircraft.json"))
+	// But first, make sure the file exists.
+	if err := os.MkdirAll(outDir, 0777); err != nil {
+		return err
+	}
+	p := path.Join(outDir, "all_aircraft.json")
+	b, err := os.ReadFile(p)
 	if err != nil {
-		return fmt.Errorf("reading all aircraft file: %v", err)
+		if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("reading all aircraft file: %v", err)
+		}
+		b = []byte("[]")
 	}
 	var current []FlightObservation
 	if err := json.Unmarshal(b, &current); err != nil {
@@ -56,9 +65,14 @@ func MergeHistoryFiles(dataDir, outDir string) error {
 
 	// Find the most recent entry, and use that to only keep 24h of entries.
 	keys := maps.Keys(allAircraft)
-	latestUnixSecond := slices.MaxFunc(keys, func(a, b FlightObservation) int {
-		return cmp.Compare(a.When, b.When)
-	}).When
+	var latestUnixSecond int64
+	if len(keys) == 0 {
+		latestUnixSecond = math.MinInt64
+	} else {
+		latestUnixSecond = slices.MaxFunc(keys, func(a, b FlightObservation) int {
+			return cmp.Compare(a.When, b.When)
+		}).When
+	}
 
 	cutoff := time.Unix(latestUnixSecond, 0).Add(-24 * time.Hour)
 	for _, k := range keys {
