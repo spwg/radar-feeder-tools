@@ -103,6 +103,9 @@ func MergeHistoryFiles(dataDir, outDir string) error {
 func ReadHistoricalFiles(dataDir string) (map[FlightObservation]struct{}, error) {
 	entries, err := os.ReadDir(dataDir)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("read data dir: %v", err)
 	}
 	allAircraft := make(map[FlightObservation]struct{})
