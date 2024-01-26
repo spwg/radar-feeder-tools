@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -16,13 +17,16 @@ import (
 )
 
 var (
-	dataDir          = flag.String("data_dir", "/run/dump1090-mutability", "")
+	dataDir          = flag.String("data_dir", "", "")
 	outDir           = flag.String("out_dir", "/tmp/dump1090-history-manager", "")
 	uploadToPostgres = flag.Bool("postgres_upload", false, "Whether to upload to postgres.")
 )
 
 func run() error {
 	defer glog.Flush()
+	if *dataDir == "" {
+		return fmt.Errorf("--data_dir is required")
+	}
 	ctx := context.Background()
 	switch {
 	case *uploadToPostgres:
