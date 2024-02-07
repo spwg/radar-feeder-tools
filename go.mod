@@ -7,6 +7,7 @@ require github.com/google/go-cmp v0.6.0
 require (
 	github.com/jackc/pgx/v4 v4.18.1
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
+	golang.org/x/sys v0.5.0
 )
 
 require (

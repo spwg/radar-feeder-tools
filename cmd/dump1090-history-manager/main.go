@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -14,6 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/spwg/radar-feeder-tools/internal/history"
 	"github.com/spwg/radar-feeder-tools/internal/radarstorage"
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -36,20 +38,28 @@ func run() error {
 			return err
 		}
 		glog.Infof("Flights %+v", flights)
-		glog.Infof("Connecting to Postgres.")
-		db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
-		if err != nil {
-			return err
+		var errUpload error
+		for retry := 0; retry < 3; retry++ {
+			glog.Infof("Connecting to Postgres.")
+			db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
+			if err != nil {
+				return err
+			}
+			defer db.Close()
+			glog.Infof("Uploading to Postgres.")
+			now := time.Now()
+			errUpload = radarstorage.UploadToFlyPostgresInstance(ctx, db, flights)
+			if errUpload != nil {
+				if errors.Is(err, unix.ECONNRESET) {
+					glog.Warningf("Error uploading to postgres: %v", errUpload)
+					continue
+				}
+				return errUpload
+			}
+			glog.Infof("Uploaded in %v.", time.Since(now))
+			return nil
 		}
-		defer db.Close()
-
-		glog.Infof("Uploading to Postgres.")
-		now := time.Now()
-		if err := radarstorage.UploadToFlyPostgresInstance(ctx, db, flights); err != nil {
-			return err
-		}
-		glog.Infof("Uploaded in %v.", time.Since(now))
-		return nil
+		return fmt.Errorf("failed to upload flights to the database in 3 tries: latest error: %v", errUpload)
 	default:
 		return history.MergeHistoryFiles(*dataDir, *outDir)
 	}

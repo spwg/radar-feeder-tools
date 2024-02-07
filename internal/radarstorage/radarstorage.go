@@ -40,7 +40,7 @@ func UploadToFlyPostgresInstance(ctx context.Context, db *sql.DB, flights map[hi
 	q += " on conflict do nothing;"
 	result, err := db.ExecContext(ctx, q, rows...)
 	if err != nil {
-		return fmt.Errorf("UploadToFlyPostgresInstance: %v", err)
+		return fmt.Errorf("UploadToFlyPostgresInstance: %w", err)
 	}
 	n, err := result.RowsAffected()
 	if err != nil {
