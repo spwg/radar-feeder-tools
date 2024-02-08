@@ -84,7 +84,7 @@ func MergeHistoryFiles(dataDir, outDir string) error {
 	// Write back the updated list of aircraft, sorted to make it easier to read output.
 	current = maps.Keys(allAircraft)
 	slices.SortStableFunc(current, func(a, b FlightObservation) int {
-		return or(cmp.Compare(a.When, b.When), cmp.Compare(a.Code, b.Code))
+		return cmp.Or(cmp.Compare(a.When, b.When), cmp.Compare(a.Code, b.Code))
 	})
 	b, err = json.MarshalIndent(current, "  ", "  ")
 	if err != nil {
@@ -135,14 +135,4 @@ func ReadHistoricalFiles(dataDir string) (map[FlightObservation]struct{}, error)
 		}
 	}
 	return allAircraft, nil
-}
-
-func or[T cmp.Ordered](args ...T) T {
-	var zero T
-	for _, e := range args {
-		if e != zero {
-			return e
-		}
-	}
-	return zero
 }

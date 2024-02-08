@@ -53,20 +53,10 @@ func TestHistoryAccumulator(t *testing.T) {
 		{Code: "N920PD  ", When: 1705026154},
 	}
 	less := func(a, b *aircraft) int {
-		return or(cmp.Compare(a.Code, b.Code), cmp.Compare(a.When, b.When))
+		return cmp.Or(cmp.Compare(a.Code, b.Code), cmp.Compare(a.When, b.When))
 	}
 	slices.SortStableFunc(got, less)
 	if diff := cmpdiff.Diff(got, want); diff != "" {
 		t.Error(diff)
 	}
-}
-
-func or[T cmp.Ordered](args ...T) T {
-	var zero T
-	for _, e := range args {
-		if e != zero {
-			return e
-		}
-	}
-	return zero
 }
