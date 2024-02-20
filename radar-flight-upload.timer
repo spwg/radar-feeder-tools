@@ -1,0 +1,10 @@
+[Unit]
+Description=Uploads flight records from radar to a database
+Requires=radar-flight-upload.service
+
+[Timer]
+Unit=radar-flight-upload.service
+OnCalendar=*-*-* *:*:00
+
+[Install]
+WantedBy=timers.target
