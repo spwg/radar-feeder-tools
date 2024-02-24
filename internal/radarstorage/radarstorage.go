@@ -32,7 +32,7 @@ func UploadToFlyPostgresInstance(ctx context.Context, db *sql.DB, flights map[hi
 	// Remove the trailing comma and space.
 	q = q[:len(q)-2]
 	// "on conflict do nothing" documented at
-	// https://www.postgresql.org/docs/current/sql-insert.html. It does what is
+	// https://www.postgresql.org/docs/current/sql-insert.html. It does what it
 	// sounds like. When the data would otherwise have a primary key conflict
 	// (composite primary key on flight & seen time), it instead does nothing.
 	// This is desirable because it means rerunning the inserts won't cause an
