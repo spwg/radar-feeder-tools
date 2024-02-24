@@ -39,7 +39,7 @@ func run() error {
 	glog.Infof("Reading historical files.")
 	flights, err := history.ReadHistoricalFiles(*dataDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading history files: %v", err)
 	}
 	glog.Infof("Flights %+v", flights)
 	var errUpload error
@@ -47,7 +47,7 @@ func run() error {
 		glog.Infof("Connecting to Postgres.")
 		db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
 		if err != nil {
-			return err
+			return fmt.Errorf("connecting to database: %v", err)
 		}
 		defer db.Close()
 		glog.Infof("Uploading to Postgres.")
