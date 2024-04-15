@@ -2,13 +2,13 @@
 Description=Uploads flight records to a database
 Wants=radar-flight-upload.timer
 OnFailure=notify-email@%i.service
+StartLimitIntervalSec=30
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/dump1090-history-manager --data_dir=/run/dump1090-fa --postgres_upload --alsologtostderr 2>&1
 Restart=on-failure
 RestartSec=2
-StartLimitIntervalSec=30
 StartLimitBurst=3
 
 
